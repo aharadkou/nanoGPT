@@ -117,12 +117,23 @@ def get_batch(split):
     # We recreate np.memmap every batch to avoid a memory leak, as per
     # https://stackoverflow.com/questions/45132940/numpy-memmap-memory-usage-want-to-iterate-once/61472122#61472122
     if split == 'train':
-        data = np.memmap(os.path.join(data_dir, 'train.bin'), dtype=np.uint16, mode='r')
+        data = np.load(os.path.join(data_dir, 'train.npy'), mmap_mode="r")
     else:
-        data = np.memmap(os.path.join(data_dir, 'val.bin'), dtype=np.uint16, mode='r')
-    ix = torch.randint(len(data) - block_size, (batch_size,))
-    x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
-    y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
+        data = np.load(os.path.join(data_dir, 'val.npy'), mmap_mode="r")
+    ix = torch.randint(len(data[1][0]) - block_size - 1, (batch_size,))
+    jx = torch.randint(len(data[1]), (batch_size,))
+    
+    x_seq = []
+    y_seq = []
+    for i in ix:
+        for j in jx:
+            x_seq.append(data[0][j][i:i+block_size])
+            y_seq.append(data[1][j][i+1:i+1+block_size])
+
+
+    x = torch.stack([torch.from_numpy(np.array(arr).astype(np.int64)) for arr in x_seq])
+    y = torch.stack([torch.from_numpy(np.array(arr).astype(np.int64)) for arr in y_seq])
+
     if device_type == 'cuda':
         # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
         x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)

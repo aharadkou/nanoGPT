@@ -1,0 +1,1 @@
+python sample.py --out_dir=out-shakespeare-translation --start="How far’st thou, soldier?<|endoftext|>" --device=cpu --max_new_tokens=100 --num_samples=5
