@@ -12,3 +12,5 @@ input.txt
 output.txt
 env/
 venv/
+nanogpt
+wandb
