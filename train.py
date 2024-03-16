@@ -28,7 +28,6 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 
 from model import GPTConfig, GPT
-
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
@@ -120,16 +119,13 @@ def get_batch(split):
         data = np.load(os.path.join(data_dir, 'train.npy'), mmap_mode="r")
     else:
         data = np.load(os.path.join(data_dir, 'val.npy'), mmap_mode="r")
-    ix = torch.randint(len(data[1][0]) - block_size - 1, (batch_size,))
-    jx = torch.randint(len(data[1]), (batch_size,))
+    ix = torch.randint(len(data[1]), (batch_size,))
     
     x_seq = []
     y_seq = []
     for i in ix:
-        for j in jx:
-            x_seq.append(data[0][j][i:i+block_size])
-            y_seq.append(data[1][j][i+1:i+1+block_size])
-
+        x_seq.append(data[0][i][:block_size])
+        y_seq.append(data[1][i][block_size:])
 
     x = torch.stack([torch.from_numpy(np.array(arr).astype(np.int64)) for arr in x_seq])
     y = torch.stack([torch.from_numpy(np.array(arr).astype(np.int64)) for arr in y_seq])

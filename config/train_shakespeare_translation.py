@@ -15,7 +15,7 @@ wandb_run_name = 'mini-gpt'
 
 dataset = 'shakespeare_translation'
 gradient_accumulation_steps = 1
-batch_size = 8
+batch_size = 32
 block_size = 100 #max=max_sentense_len
 
 # baby GPT model :)

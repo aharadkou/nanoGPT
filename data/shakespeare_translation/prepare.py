@@ -9,37 +9,28 @@ space_encoded = enc.encode(" ")[0]
 max_seq_len = 100
 
 def tokenize(input_str, output_str):
-   input_encoded = enc.encode(input_str)[:max_seq_len]
-   output_encoded = enc.encode(output_str)[:max_seq_len]
+   return tokenize_str(input_str) + tokenize_str(output_str)
 
-   res = input_encoded + [enc.eot_token] + output_encoded
+def tokenize_str(str):
+   max_len = max_seq_len - 1
+   encoded = enc.encode(str)[:max_len]
+   spaces_len = 0 if len(encoded) == max_len else max_len - len(encoded)
 
-   seq_len = max_seq_len * 2 + 1
-   spaces_len = 0 if len(res) >= seq_len else seq_len-len(res)
-
-   return res + [space_encoded] * spaces_len, len(input_encoded)
+   return encoded + [enc.eot_token] + spaces_len * [space_encoded]
 
 def get_tokenized_result(input_data, output_data):
-   input_str_len = []
    result = []
   
    for i in range(len(output_data)):
-    tokenized, input_tokenized_len = tokenize(input_data[i], output_data[i])
+    tokenized = tokenize(input_data[i], output_data[i])
     result += [tokenized]
-    input_str_len += [input_tokenized_len]
 
-   return result, input_str_len
+   return result
 
-def get_x_y(tokenized_array, input_str_len_arr):
+def get_x_y(tokenized_array):
    result = [[], []]
 
    for i in range(len(tokenized_array)):
-    # x = tokenized_array[i][:-1]
-    # y = tokenized_array[i][1:]
-
-    # for i in range(input_str_len_arr[i] - 1):
-    #    y[i] = -100
-
     result[0].append(tokenized_array[i])
     result[1].append(tokenized_array[i])
 
@@ -70,7 +61,7 @@ texts = list(zip(input_data.splitlines(), output_data.splitlines()))
 
 random.shuffle(texts)
 
-text_output, text_input = zip(*texts)
+text_input, text_output = zip(*texts)
 
 n_train = len(text_output)
 train_size = 0.9
@@ -81,8 +72,8 @@ train_output_data = text_output[:int(n_train*train_size)]
 val_output_data = text_output[int(n_train*train_size):]
 
 
-train_ids = np.array(get_x_y(*get_tokenized_result(train_input_data, train_output_data)))
-val_ids = np.array(get_x_y(*get_tokenized_result(val_input_data, val_output_data)))
+train_ids = np.array(get_x_y(get_tokenized_result(train_input_data, train_output_data)))
+val_ids = np.array(get_x_y(get_tokenized_result(val_input_data, val_output_data)))
 
 
 np.save(os.path.join(os.path.dirname(__file__), 'train'), train_ids)
