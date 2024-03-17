@@ -28,6 +28,10 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 
 from model import GPTConfig, GPT
+
+import tiktoken
+
+enc = tiktoken.get_encoding("gpt2")
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
@@ -119,13 +123,15 @@ def get_batch(split):
         data = np.load(os.path.join(data_dir, 'train.npy'), mmap_mode="r")
     else:
         data = np.load(os.path.join(data_dir, 'val.npy'), mmap_mode="r")
-    ix = torch.randint(len(data[1]), (batch_size,))
+    ix = torch.randint(len(data[0]), (batch_size,))
     
     x_seq = []
     y_seq = []
     for i in ix:
-        x_seq.append(data[0][i][:block_size])
-        y_seq.append(data[1][i][block_size:])
+        #print(enc.decode(data[0][i]))
+        #print(enc.decode([token for token in data[1][i] if token != -100]))
+        x_seq.append(data[0][i])
+        y_seq.append(data[1][i])
 
     x = torch.stack([torch.from_numpy(np.array(arr).astype(np.int64)) for arr in x_seq])
     y = torch.stack([torch.from_numpy(np.array(arr).astype(np.int64)) for arr in y_seq])

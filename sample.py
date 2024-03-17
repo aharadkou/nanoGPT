@@ -78,8 +78,6 @@ if start.startswith('FILE:'):
     with open(start[5:], 'r', encoding='utf-8') as f:
         start = f.read()
 max_len = 100
-start = start[:max_len - 1]
-start += '<|endoftext|>' + ' ' * 100
 start_ids = encode(start[:max_len])
 x = (torch.tensor(start_ids, dtype=torch.long, device=device)[None, ...])
 
@@ -91,9 +89,10 @@ with torch.no_grad():
             result_ids = y[0].tolist()
             try:
               eot_index = result_ids.index(enc.eot_token)
-              result_ids = result_ids[:eot_index]
+              result_ids = result_ids[eot_index + 1:]
             except:
               print('Result does not contain eot token')
             result = decode(result_ids)
-            print(result)
+            print("Input: ", start)
+            print("Translation: ", result)
             print('---------------')

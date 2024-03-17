@@ -9,33 +9,30 @@ space_encoded = enc.encode(" ")[0]
 max_seq_len = 100
 
 def tokenize(input_str, output_str):
-   return tokenize_str(input_str) + tokenize_str(output_str)
+   x = tokenize_str(input_str)
+   y = tokenize_str(output_str)
+   max_spaces = [space_encoded] * max_seq_len * 2
+   return (x + [enc.eot_token] + y + max_spaces)[:max_seq_len * 2 + 1], len(x)
 
-def tokenize_str(str):
-   max_len = max_seq_len - 1
-   encoded = enc.encode(str)[:max_len]
-   spaces_len = 0 if len(encoded) == max_len else max_len - len(encoded)
-
-   return encoded + [enc.eot_token] + spaces_len * [space_encoded]
+def tokenize_str(input_str):
+   return enc.encode(input_str)[:max_seq_len]
 
 def get_tokenized_result(input_data, output_data):
-   result = []
+   result = [[], []]
   
    for i in range(len(output_data)):
-    tokenized = tokenize(input_data[i], output_data[i])
-    result += [tokenized]
+    tokenized, x_len = tokenize(input_data[i], output_data[i])
+    x = tokenized[:-1]
+    y = tokenized[1:]
+    for j in range(x_len - 1):
+      y[j] = -100
+
+    if i == 1:
+      print(y)
+    result[0].append(x)
+    result[1].append(y)
 
    return result
-
-def get_x_y(tokenized_array):
-   result = [[], []]
-
-   for i in range(len(tokenized_array)):
-    result[0].append(tokenized_array[i])
-    result[1].append(tokenized_array[i])
-
-   return result
-
 
 def download_file_if_not_exist(file_name, url):
   file_path = os.path.join(os.path.dirname(__file__), file_name)
@@ -72,8 +69,8 @@ train_output_data = text_output[:int(n_train*train_size)]
 val_output_data = text_output[int(n_train*train_size):]
 
 
-train_ids = np.array(get_x_y(get_tokenized_result(train_input_data, train_output_data)))
-val_ids = np.array(get_x_y(get_tokenized_result(val_input_data, val_output_data)))
+train_ids = np.array(get_tokenized_result(train_input_data, train_output_data))
+val_ids = np.array(get_tokenized_result(val_input_data, val_output_data))
 
 
 np.save(os.path.join(os.path.dirname(__file__), 'train'), train_ids)
