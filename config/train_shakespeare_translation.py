@@ -9,13 +9,13 @@ log_interval = 10 # don't print toooften
 # we expect to overfit on this small dataset, so only save when val improves
 always_save_checkpoint = False
 
-wandb_log = False # override via command line if you like
+wandb_log = True # override via command line if you like
 wandb_project = 'gpt-shakespeare'
 wandb_run_name = 'gpt-shakespeare'
 
 dataset = 'shakespeare_translation'
 gradient_accumulation_steps = 1
-batch_size = 1
+batch_size = 64
 block_size = 200 #max=max_sentense_len
 
 # baby GPT model :)
